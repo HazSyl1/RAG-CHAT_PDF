@@ -61,7 +61,7 @@ async def start(files: List[UploadFile] = File(...)):
         for name in files:
             os.remove(os.path.join(root,name))
     logging.info("**** PATH CLEARED ****")
-    logging.infO("**** START CHAT ****")
+    logging.info("**** START CHAT ****")
     
     return JSONResponse(content={"message": "Files uploaded successfully. Chat Created", "filenames": uploaded_files})
 
