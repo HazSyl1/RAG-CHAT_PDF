@@ -17,6 +17,9 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
+import logging
+logging.basicConfig(level=logging.INFO)
+
 load_dotenv()
 
 def pdf_processing():
@@ -37,12 +40,14 @@ def vectorise(text_chunks):
     index_name='rag-cpdf'
     #Making sure the DB does not contain any previous vectors
     
-    # pc = Pinecone(
-    #     api_key=os.getenv("PINECONE_API_KEY")
-    # )
-    # index=pc.Index(index_name)
-    # index.delete(delete_all=True,namespace='real')
-    
+    pc = Pinecone(
+        api_key=os.getenv("PINECONE_API_KEY")
+    )
+    index=pc.Index(index_name)
+    index_stats=index.describe_index_stats()
+    if "current" in index_stats['namespaces'].keys():
+        index.delete(delete_all=True,namespace='current')
+        logging.info("**** CLEARED SPACE ****")
     
     vectorstore = PineconeVectorStore.from_documents(
         text_chunks,
@@ -52,6 +57,7 @@ def vectorise(text_chunks):
     )
     
     return vectorstore
+    #Depricated
     # print(index)
     #index.delete(delete_all=True,namespace='real')
     #pc_info=index.describe_index_stats(namespace="real") 
@@ -80,13 +86,7 @@ def create_conversation(vectorstore):
     memory=memory)
     return conversation_chain
     
+def chat(conversation,question):
+    reponse=conversation({'question':question})
+    return reponse
     
-text_chunks=pdf_processing()
-print("**** PDF's Processed ****")
-vectorstore=vectorise(text_chunks)
-print(f"**** Pinecone Vectors Created:{vectorstore} ****")
-conversation=create_conversation(vectorstore)
-print("**** CONVERSATION MODEL CREATED ****")
-
-reponse=conversation({'question':"Summarise the methadology in the pdf."})
-print(reponse)
