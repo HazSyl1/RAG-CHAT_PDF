@@ -1,4 +1,4 @@
-from fastapi import FastAPI,File, UploadFile ,Request
+from fastapi import FastAPI,File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from data_processing import pdf_processing , vectorise , create_conversation ,chat
@@ -71,7 +71,7 @@ async def start(files: List[UploadFile] = File(...)):
         return JSONResponse(content={"error":"Files not Uploaded"},status_code=400)
 
 @app.post("/chat")
-async def chat_start(request: Request):
+async def chat_start(request):
     global conversation
     data=await request.json()
     question=data.get('question')
