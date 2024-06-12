@@ -1,4 +1,4 @@
-from fastapi import FastAPI,File, UploadFile ,Request
+from fastapi import FastAPI,File, UploadFile ,Request ,Form
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from data_processing import pdf_processing , vectorise , create_conversation ,chat
@@ -23,14 +23,14 @@ app.add_middleware(
 
 conversation = None
 
-def pipeline():
+def pipeline(model):
     global conversation
     
     text_chunks=pdf_processing()
     logging.info("**** PDF's Processed ****")
-    vectorstore=vectorise(text_chunks)
+    vectorstore=vectorise(text_chunks,model)
     logging.info(f"**** Pinecone Vectors Created:{vectorstore} ****")
-    conversation=create_conversation(vectorstore)
+    conversation=create_conversation(vectorstore,model)
     logging.info("**** CONVERSATION MODEL CREATED ****")
     logging.info("**** CHAT STARTED KINDLY ASK QUESTIONS ****")
     
@@ -40,8 +40,13 @@ def index():
     return {"message","Server Running"}
 
 @app.post("/upload_files")
-async def start(files: List[UploadFile] = File(...)):
-    try:
+async def start(files:List[UploadFile]=File(...),model: str = Form(...)):
+    try: 
+        print("FILES:",files)
+        print("MODEL:",model)
+        
+        if not files or not model:
+            return JSONResponse(content={"error":"Kindly Upload Files and Select a model"},status_code=400)
         UPLOAD_DIR="pdfs"
         os.makedirs(UPLOAD_DIR,exist_ok=True)
         uploaded_files=[]
@@ -53,7 +58,7 @@ async def start(files: List[UploadFile] = File(...)):
         logging.info(f"**** FILES UPLOADED {uploaded_files} ****")
         
         logging.info("**** FILES UPLOADED SUCCESSFULLY ****")
-        pipeline()
+        pipeline(model)
         logging.info("**** CHAT CREATED, CLEARING PATH ****")
         
         for root,_,files in os.walk(UPLOAD_DIR):
@@ -67,8 +72,9 @@ async def start(files: List[UploadFile] = File(...)):
         # "Access-Control-Allow-Origin": "*",}
         
         return JSONResponse(content={"message": "Files uploaded successfully. Chat Created", "filenames": uploaded_files},status_code=200)
-    except:
-        return JSONResponse(content={"error":"Files not Uploaded"},status_code=400)
+    except Exception as e:
+        print(e)
+        return JSONResponse(content={"error":"Files not Uploaded(e)"},status_code=400)
 
 @app.post("/chat")
 async def chat_start(request: Request):
