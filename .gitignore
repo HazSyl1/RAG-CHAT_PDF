@@ -1,0 +1,6 @@
+*.env
+*.pdf
+xxx.ipynb
+eval.ipynb
+rag-bot/
+/rag-bot
