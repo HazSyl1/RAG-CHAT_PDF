@@ -30,19 +30,41 @@ from langchain.prompts import (
 #os.environ['HF_TOKEN'] =os.getenv("HF_TOKEN")
 load_dotenv(override=True)
 #print("HF_TOKEN:",os.getenv("HF_TOKEN"))
+
+
 def pdf_processing():
-    loader=PyPDFDirectoryLoader("pdfs")
-    data=loader.load()
+    try:
+        loader=PyPDFDirectoryLoader("pdfs")
+        data=loader.load()
 
-    text_splitter=RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=20,
-        )
-    text_chunks = text_splitter.split_documents(data)
-    return text_chunks
+        text_splitter=RecursiveCharacterTextSplitter(
+            chunk_size=500,
+            chunk_overlap=20,
+            )
+        text_chunks = text_splitter.split_documents(data)
+        return text_chunks
+    except:
+        return ValueError
 
-
-def vectorise(text_chunks,model):
+def del_vectors(model,session_id):
+    if(model=="GOOGLE"):
+        index_name='rag-cpdf'
+    else:
+        index_name='rag-mis'
+        
+    pc = Pinecone(
+        api_key=os.getenv("PINECONE_API_KEY")
+    )
+    
+    index=pc.Index(index_name)
+    index_stats=index.describe_index_stats()
+    if session_id in index_stats['namespaces'].keys():
+        index.delete(delete_all=True,namespace=session_id)
+        print("VECTOR FOUND:DELETED")
+    else:
+        print("NO VECTORSTORE")
+        
+def vectorise(text_chunks,model,session_id):
     if(model=="GOOGLE"):
         embeddings=GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         index_name='rag-cpdf'
@@ -51,18 +73,17 @@ def vectorise(text_chunks,model):
         embeddings = MistralAIEmbeddings(model = "mistral-embed",api_key=os.getenv("MINSTRAL_AI_API_KEY"))
         index_name='rag-mis'
     
-    #Making sure the DB does not contain any previous vectors
     
     pc = Pinecone(
         api_key=os.getenv("PINECONE_API_KEY")
     )
     
-    index=pc.Index(index_name)
-    index_stats=index.describe_index_stats()
-    if "current" in index_stats['namespaces'].keys():
-        index.delete(delete_all=True,namespace='current')
+    # index=pc.Index(index_name)
+    # index_stats=index.describe_index_stats()
+    # if "current" in index_stats['namespaces'].keys():
+    #     index.delete(delete_all=True,namespace='current')
     
-    logging.info("**** CLEARED SPACE ****")
+    #logging.info("**** CLEARED SPACE ****")
         
     
     
@@ -70,7 +91,7 @@ def vectorise(text_chunks,model):
         text_chunks,
         index_name=index_name,
         embedding=embeddings,
-        namespace="current"
+        namespace=session_id
     )
     
     return vectorstore
