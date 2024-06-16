@@ -74,7 +74,7 @@ async def delete_session(request: Request):
         #supabase.table('sessions').delete().eq('session_id', session_id).execute()
         if(session_id in sessions):
             del sessions[session_id]
-        logging.info(f"**** SESSION {[session['session_id'] for session in sessions]} CREATED ****")
+            logging.info(f"**** SESSION {[session['session_id'] for session in sessions]} CREATED ****")
 
         print("*********************** Sessions Live:",sessions,"***********************")
         return JSONResponse(content={"message": "Session Deleted", "session_id": session_id},status_code=200) 
