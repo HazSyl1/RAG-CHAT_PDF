@@ -1,0 +1,71 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "app.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "app.py"
+      }
+    ],
+    "env": {
+        "GOOGLE_API_KEY": "@GOOGLE_API_KEY",
+        "PINECONE_API_KEY": "@PINECONE_API_KEY",
+        "MINSTRAL_AI_API_KEY": "@MINSTRAL_AI_API_KEY",
+        "HF_TOKEN": "@HF_TOKEN",
+        "GROQ_API_KEY": "@GROQ_API_KEY",
+        "SUPABASE_URL": "@SUPABASE_URL",
+        "SUPABASE_KEY": "@SUPABASE_KEY"
+      },
+    "functions": {
+      "api/create_session": {
+        "handler": "app.app",
+        "events": [
+          {
+            "http": {
+              "method": "POST",
+              "path": "/api/create_session"
+            }
+          }
+        ]
+      },
+      "api/upload_files": {
+        "handler": "app.app",
+        "events": [
+          {
+            "http": {
+              "method": "POST",
+              "path": "/api/upload_files"
+            }
+          }
+        ]
+      },
+      "api/chat": {
+        "handler": "app.app",
+        "events": [
+          {
+            "http": {
+              "method": "POST",
+              "path": "/api/chat"
+            }
+          }
+        ]
+      },
+      "api/delete_session": {
+        "handler": "app.app",
+        "events": [
+          {
+            "http": {
+              "method": "POST",
+              "path": "/api/delete_session"
+            }
+          }
+        ]
+      }
+    }
+  }
+  
