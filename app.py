@@ -13,6 +13,7 @@ from supabase import create_client,Client
 from dotenv import load_dotenv
 import json
 import warnings
+from datetime import datetime
 warnings.filterwarnings("ignore")
 load_dotenv(override=True)
 
@@ -51,7 +52,8 @@ async def create_session():
     try:
         session_id=str(uuid.uuid4())
         sessions[session_id]={"model":None,"conversation":None}
-        supabase.table('sessions').insert({"session_id":session_id}).execute()
+        current_time = datetime.utcnow().isoformat()
+        supabase.table('sessions').insert({"session_id":session_id,"logged_in": current_time}).execute()
         
         logging.info(f"**** SESSION {session_id} CREATED ****")
         return JSONResponse(content={"message": "Session Created", "session_id": session_id},status_code=200)
@@ -74,10 +76,12 @@ async def delete_session(request: Request):
             del_vectors(model,session_id)
         #supabase.table('sessions').delete().eq('session_id', session_id).execute()
         if(session_id in sessions):
+            current_time = datetime.utcnow().isoformat()
+            supabase.table('sessions').update({"logged_out": current_time}).eq('session_id', session_id).execute()
             del sessions[session_id]
-            logging.info(f"**** SESSION {[session['session_id'] for session in sessions]} CREATED ****")
+            print(f"**** SESSION {session_id} DELETED ****")
 
-        print("*********************** Sessions Live:",sessions,"***********************")
+        print("*********************** Sessions Live:",[session['session_id'] for session in sessions],"***********************")
         return JSONResponse(content={"message": "Session Deleted", "session_id": session_id},status_code=200) 
         
 @app.get("/")
