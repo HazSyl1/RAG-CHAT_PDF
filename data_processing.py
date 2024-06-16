@@ -32,9 +32,9 @@ load_dotenv(override=True)
 #print("HF_TOKEN:",os.getenv("HF_TOKEN"))
 
 
-def pdf_processing():
+def pdf_processing(UPLOAD_DIR):
     try:
-        loader=PyPDFDirectoryLoader("pdfs")
+        loader=PyPDFDirectoryLoader(UPLOAD_DIR)
         data=loader.load()
 
         text_splitter=RecursiveCharacterTextSplitter(

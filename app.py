@@ -48,9 +48,9 @@ def delete_sessions_on_shutdown():
     
 atexit.register(delete_sessions_on_shutdown)
 
-def pipeline(model,session_id):
+def pipeline(model,session_id,UPLOAD_DIR):
     global conversation
-    text_chunks=pdf_processing()
+    text_chunks=pdf_processing(UPLOAD_DIR)
     logging.info("**** PDF's Processed ****")
     vectorstore=vectorise(text_chunks,model,session_id)
     logging.info(f"**** Pinecone Vectors Created:{vectorstore} ****")
@@ -139,7 +139,7 @@ async def start(session_id:str=Form(...), files:List[UploadFile]=File(...),model
             'files':uploaded_files
         }).eq('session_id',session_id).execute()
         
-        conversation=pipeline(model,session_id)
+        conversation=pipeline(model,session_id,UPLOAD_DIR)
         sessions[session_id]['conversation']=conversation
         sessions[session_id]['model']=model
         
