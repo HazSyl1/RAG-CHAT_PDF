@@ -13,6 +13,7 @@ from supabase import create_client,Client
 from dotenv import load_dotenv
 import json
 import warnings
+import atexit
 from datetime import datetime
 warnings.filterwarnings("ignore")
 load_dotenv(override=True)
@@ -32,6 +33,19 @@ app.add_middleware(
 )
 
 sessions={}
+
+
+def delete_sessions_on_shutdown():
+    for session_id in sessions:
+        del_vectors(sessions[session_id]['model'],session_id)
+        #supabase.table('sessions').delete().eq('session_id', session_id).execute()
+        if(session_id in sessions):
+            current_time = datetime.utcnow().isoformat()
+            supabase.table('sessions').update({"logged_out": current_time}).eq('session_id', session_id).execute()
+            del sessions[session_id]
+            print(f"**** SESSION {session_id} DELETED ****")
+
+atexit.register(delete_sessions_on_shutdown)
 
 def pipeline(model,session_id):
     global conversation
