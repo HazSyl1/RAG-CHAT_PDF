@@ -36,15 +36,16 @@ sessions={}
 
 
 def delete_sessions_on_shutdown():
-    for session_id in sessions:
+    live=sessions.keys()
+    for session_id in live:
         del_vectors(sessions[session_id]['model'],session_id)
         #supabase.table('sessions').delete().eq('session_id', session_id).execute()
-        if(session_id in sessions):
-            current_time = datetime.utcnow().isoformat()
-            supabase.table('sessions').update({"logged_out": current_time}).eq('session_id', session_id).execute()
-            del sessions[session_id]
-            print(f"**** SESSION {session_id} DELETED ****")
-
+        current_time = datetime.utcnow().isoformat()
+        supabase.table('sessions').update({"logged_out": current_time}).eq('session_id', session_id).execute()
+        
+        print(f"**** SESSION {session_id} DELETED ****")
+    logging.info("**** ALL SESSIONS DELETED.SHUTTING OFF ****")
+    
 atexit.register(delete_sessions_on_shutdown)
 
 def pipeline(model,session_id):
