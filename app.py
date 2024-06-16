@@ -83,8 +83,8 @@ async def delete_session(request: Request):
             supabase.table('sessions').update({"logged_out": current_time}).eq('session_id', session_id).execute()
             del sessions[session_id]
             print(f"**** SESSION {session_id} DELETED ****")
-
-        print("*********************** Sessions Live:",[session['session_id'] for session in sessions],"***********************")
+        live_sessions=[session['session_id'] for session in sessions]
+        print(f"*********************** Sessions Live:{live_sessions} ***********************")
         return JSONResponse(content={"message": "Session Deleted", "session_id": session_id},status_code=200) 
         
 @app.get("/")
