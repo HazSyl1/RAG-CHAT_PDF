@@ -55,7 +55,9 @@ async def create_session():
         current_time = datetime.utcnow().isoformat()
         supabase.table('sessions').insert({"session_id":session_id,"logged_in": current_time}).execute()
         
-        logging.info(f"**** SESSION {session_id} CREATED ****")
+        
+        print(f"**** SESSION {session_id} CREATED ****")
+        logging.info(f"**** SESSION CREATED ****")
         return JSONResponse(content={"message": "Session Created", "session_id": session_id},status_code=200)
     except Exception as e:
         print(e)
@@ -67,7 +69,8 @@ async def delete_session(request: Request):
     session_id=data.get('session_id')
     session=supabase.table('sessions').select('*').eq('session_id',session_id).execute().data
     if not session:
-        logging.info(f"**** SESSION {session_id} NOT FOUND ****")
+        print(f"**** SESSION {session_id} NOT FOUND ****")
+        logging.info(f"**** SESSION NOT FOUND ****")
         return JSONResponse(content={"error":"Session not found"},status_code=404)
     else:
         model=session[0]['model']
@@ -91,16 +94,16 @@ def index():
 @app.post("/upload_files")
 async def start(session_id:str=Form(...), files:List[UploadFile]=File(...),model: str = Form(...)):
     try:
-        print("UPLOADING FILES")
+        logging.info("**** UPLOADING FILES ****")
         print(model,files,session_id)
         if not supabase.table('sessions').select('session_id').eq('session_id',session_id).execute():
-            logging.info(f"**** SESSION {session_id} NOT FOUND****")
+            print(f"**** SESSION {session_id} NOT FOUND****")
             print(e)
             return JSONResponse(content={"error":"Invalid session ID"},status_code=404)
-        logging.info("SESSION UPLOAD",session_id)
-        logging.info("FILES:",files)
-        logging.info("MODEL:",model)
-        logging.info("SESSION:",session_id)
+        print("SESSION UPLOAD",session_id)
+        print("FILES:",files)
+        print("MODEL:",model)
+        print("SESSION:",session_id)
         
         if not files or not model:
             return JSONResponse(content={"error":"Kindly Upload Files and Select a model"},status_code=400)
@@ -112,7 +115,8 @@ async def start(session_id:str=Form(...), files:List[UploadFile]=File(...),model
             with open(file_location,"wb") as f:
                 f.write(await file.read())
             uploaded_files.append(file.filename)
-        logging.info(f"**** FILES UPLOADED {uploaded_files} ****")
+        print(f"**** Uploaded Files:{uploaded_files} ****")
+        logging.info(f"**** FILES UPLOADED ****")
         logging.info("**** FILES UPLOADED SUCCESSFULLY ****")
         
         supabase.table('sessions').update({
@@ -162,7 +166,8 @@ async def chat_start(request: Request):
     try:
         #conversation=json.loads(conversation_json)
         response=chat(sessions[session_id]['conversation'],question)
-        logging.info(response['answer'])
+        print(response['answer'])
+        logging.info("**** Answered ****")
         return JSONResponse(content={"response":response['answer']})
     except Exception as e:
         logging.info("**** SESSION_ID not verified ****")
